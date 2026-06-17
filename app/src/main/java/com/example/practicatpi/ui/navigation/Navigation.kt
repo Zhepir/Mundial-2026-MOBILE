@@ -8,8 +8,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.practicatpi.ui.screens.DetallePartidoScreen
 import com.example.practicatpi.ui.screens.ListaPartidosScreen
+import com.example.practicatpi.ui.screens.LoginScreen
 
 object Routes {
+
+    const val LOGIN = "login"
     const val LISTA_PARTIDOS = "lista_partidos"
     const val DETALLE_PARTIDO = "detalle_partido"
 }
@@ -21,13 +24,25 @@ fun Navigation() {
 
     NavHost(
         navController = navController,
-        startDestination = Routes.LISTA_PARTIDOS
+        startDestination = Routes.LOGIN
     ) {
+
+        composable(
+            route = Routes.LOGIN
+        ) {
+
+            LoginScreen(
+                navController = navController
+            )
+        }
 
         composable(
             route = Routes.LISTA_PARTIDOS
         ) {
-            ListaPartidosScreen(navController)
+
+            ListaPartidosScreen(
+                navController = navController
+            )
         }
 
         composable(
@@ -40,9 +55,12 @@ fun Navigation() {
         ) { backStackEntry ->
 
             val id =
-                backStackEntry.arguments?.getString("id") ?: ""
+                backStackEntry.arguments?.getString("id")
+                    ?: ""
 
-            DetallePartidoScreen(id)
+            DetallePartidoScreen(
+                id = id
+            )
         }
     }
 }

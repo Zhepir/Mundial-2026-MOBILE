@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.practicatpi.ui.navigation.Routes
+import com.example.practicatpi.ui.state.PartidoListaUiState
 import com.example.practicatpi.utils.normalizeFlag
 import com.example.practicatpi.viewmodels.MundialViewModel
 
@@ -26,8 +27,7 @@ fun ListaPartidosScreen(
     viewModel: MundialViewModel = viewModel()
 ) {
 
-    val partidos by viewModel.partidos.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+    val uiState by viewModel.listaUiState.collectAsState()
 
     var grupoSeleccionado by remember {
         mutableStateOf("Todos")
@@ -39,6 +39,13 @@ fun ListaPartidosScreen(
 
     LaunchedEffect(Unit) {
         viewModel.cargarPartidos()
+    }
+
+    val partidos = when (uiState) {
+        is PartidoListaUiState.Success ->
+            (uiState as PartidoListaUiState.Success).partidos
+
+        else -> emptyList()
     }
 
     val grupos = listOf("Todos") +
@@ -98,16 +105,12 @@ fun ListaPartidosScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-
                     focusedBorderColor = Color.Black,
                     unfocusedBorderColor = Color.Black,
-
                     focusedLabelColor = Color.Black,
                     unfocusedLabelColor = Color.Black,
-
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black,
-
                     focusedTrailingIconColor = Color.Black,
                     unfocusedTrailingIconColor = Color.Black
                 ),
@@ -146,98 +149,110 @@ fun ListaPartidosScreen(
             modifier = Modifier.height(16.dp)
         )
 
-        if (isLoading) {
+        when (uiState) {
 
-            CircularProgressIndicator()
+            is PartidoListaUiState.Loading -> {
 
-        } else {
+                CircularProgressIndicator()
+            }
 
-            LazyColumn {
+            is PartidoListaUiState.Error -> {
 
-                items(partidosFiltrados) { partido ->
+                Text(
+                    text = (uiState as PartidoListaUiState.Error).mensaje,
+                    color = Color.Red
+                )
+            }
 
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White
-                        ),
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = 4.dp
-                        )
-                    ) {
+            is PartidoListaUiState.Success -> {
 
-                        Column(
-                            modifier = Modifier.padding(16.dp)
+                LazyColumn {
+
+                    items(partidosFiltrados) { partido ->
+
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = 4.dp
+                            )
                         ) {
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                            Column(
+                                modifier = Modifier.padding(16.dp)
                             ) {
 
-                                Row {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
 
-                                    AsyncImage(
-                                        model = "https://flagcdn.com/w40/${normalizeFlag(partido.flag1)}.png",
-                                        contentDescription = null,
-                                        modifier = Modifier.size(24.dp)
-                                    )
+                                    Row {
 
-                                    Spacer(
-                                        modifier = Modifier.width(8.dp)
-                                    )
+                                        AsyncImage(
+                                            model = "https://flagcdn.com/w40/${normalizeFlag(partido.flag1)}.png",
+                                            contentDescription = null,
+                                            modifier = Modifier.size(24.dp)
+                                        )
 
-                                    Text(
-                                        text = partido.equipo1
-                                    )
+                                        Spacer(
+                                            modifier = Modifier.width(8.dp)
+                                        )
+
+                                        Text(
+                                            text = partido.equipo1
+                                        )
+                                    }
+
+                                    Text("VS")
+
+                                    Row {
+
+                                        Text(
+                                            text = partido.equipo2
+                                        )
+
+                                        Spacer(
+                                            modifier = Modifier.width(8.dp)
+                                        )
+
+                                        AsyncImage(
+                                            model = "https://flagcdn.com/w40/${normalizeFlag(partido.flag2)}.png",
+                                            contentDescription = null,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
                                 }
 
-                                Text("VS")
+                                Spacer(
+                                    modifier = Modifier.height(8.dp)
+                                )
 
-                                Row {
+                                Text(
+                                    text = "Grupo: ${partido.grupo}"
+                                )
 
-                                    Text(
-                                        text = partido.equipo2
-                                    )
+                                Text(
+                                    text = "Fecha: ${partido.fecha}"
+                                )
 
-                                    Spacer(
-                                        modifier = Modifier.width(8.dp)
-                                    )
+                                Spacer(
+                                    modifier = Modifier.height(12.dp)
+                                )
 
-                                    AsyncImage(
-                                        model = "https://flagcdn.com/w40/${normalizeFlag(partido.flag2)}.png",
-                                        contentDescription = null,
-                                        modifier = Modifier.size(24.dp)
-                                    )
+                                Button(
+                                    onClick = {
+                                        navController.navigate(
+                                            "${Routes.DETALLE_PARTIDO}/${partido.id}"
+                                        )
+                                    }
+                                ) {
+                                    Text("Ver detalle")
                                 }
-                            }
-
-                            Spacer(
-                                modifier = Modifier.height(8.dp)
-                            )
-
-                            Text(
-                                text = "Grupo: ${partido.grupo}"
-                            )
-
-                            Text(
-                                text = "Fecha: ${partido.fecha}"
-                            )
-
-                            Spacer(
-                                modifier = Modifier.height(12.dp)
-                            )
-
-                            Button(
-                                onClick = {
-                                    navController.navigate(
-                                        "${Routes.DETALLE_PARTIDO}/${partido.id}"
-                                    )
-                                }
-                            ) {
-                                Text("Ver detalle")
                             }
                         }
                     }

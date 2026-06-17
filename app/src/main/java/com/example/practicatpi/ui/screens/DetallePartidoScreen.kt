@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.practicatpi.ui.state.PartidoDetalleUiState
 import com.example.practicatpi.utils.normalizeFlag
 import com.example.practicatpi.viewmodels.MundialViewModel
 
@@ -23,7 +24,7 @@ fun DetallePartidoScreen(
     viewModel: MundialViewModel = viewModel()
 ) {
 
-    val detalle by viewModel.detalle.collectAsState()
+    val uiState by viewModel.detalleUiState.collectAsState()
 
     LaunchedEffect(id) {
         viewModel.cargarDetalle(id)
@@ -47,85 +48,100 @@ fun DetallePartidoScreen(
             modifier = Modifier.height(16.dp)
         )
 
-        if (detalle == null) {
+        when (uiState) {
 
-            CircularProgressIndicator()
+            is PartidoDetalleUiState.Loading -> {
 
-        } else {
+                CircularProgressIndicator()
+            }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 6.dp
+            is PartidoDetalleUiState.Error -> {
+
+                Text(
+                    text = (uiState as PartidoDetalleUiState.Error).mensaje,
+                    color = Color.Red
                 )
-            ) {
+            }
 
-                Column(
-                    modifier = Modifier.padding(16.dp)
+            is PartidoDetalleUiState.Success -> {
+
+                val detalle =
+                    (uiState as PartidoDetalleUiState.Success).partido
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 6.dp
+                    )
                 ) {
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    Column(
+                        modifier = Modifier.padding(16.dp)
                     ) {
 
-                        Row {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
 
-                            AsyncImage(
-                                model = "https://flagcdn.com/w40/${normalizeFlag(detalle!!.flag1)}.png",
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp)
-                            )
+                            Row {
 
-                            Spacer(
-                                modifier = Modifier.width(8.dp)
-                            )
+                                AsyncImage(
+                                    model = "https://flagcdn.com/w40/${normalizeFlag(detalle.flag1)}.png",
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
 
-                            Text(
-                                text = detalle!!.equipo1
-                            )
+                                Spacer(
+                                    modifier = Modifier.width(8.dp)
+                                )
+
+                                Text(
+                                    text = detalle.equipo1
+                                )
+                            }
+
+                            Text("VS")
+
+                            Row {
+
+                                Text(
+                                    text = detalle.equipo2
+                                )
+
+                                Spacer(
+                                    modifier = Modifier.width(8.dp)
+                                )
+
+                                AsyncImage(
+                                    model = "https://flagcdn.com/w40/${normalizeFlag(detalle.flag2)}.png",
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
 
-                        Text("VS")
+                        Spacer(
+                            modifier = Modifier.height(16.dp)
+                        )
 
-                        Row {
+                        Text("Grupo: ${detalle.grupo}")
 
-                            Text(
-                                text = detalle!!.equipo2
-                            )
+                        Text("Fecha: ${detalle.fecha}")
 
-                            Spacer(
-                                modifier = Modifier.width(8.dp)
-                            )
+                        Text("Estadio: ${detalle.estadio}")
 
-                            AsyncImage(
-                                model = "https://flagcdn.com/w40/${normalizeFlag(detalle!!.flag2)}.png",
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+                        Text("Precio: USD ${detalle.precio}")
+
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
+
+                        Text("ID: ${detalle.id}")
                     }
-
-                    Spacer(
-                        modifier = Modifier.height(16.dp)
-                    )
-
-                    Text("Grupo: ${detalle!!.grupo}")
-
-                    Text("Fecha: ${detalle!!.fecha}")
-
-                    Text("Estadio: ${detalle!!.estadio}")
-
-                    Text("Precio: USD ${detalle!!.precio}")
-
-                    Spacer(
-                        modifier = Modifier.height(8.dp)
-                    )
-
-                    Text("ID: ${detalle!!.id}")
                 }
             }
         }
